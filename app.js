@@ -23,26 +23,53 @@ function say(text, isError = false) {
 
 /* ---------------------------------------------------------------- the model */
 
-// SmolLM2 is small enough to live in a tab. WebGPU when the browser has it, WASM when it doesn't.
+// `"gpu" in navigator` is not the same as having a usable GPU: blocklisted drivers, VMs and
+// disabled hardware acceleration all expose navigator.gpu and then hand back a null adapter
+async function pickBackend() {
+  if ("gpu" in navigator) {
+    try {
+      const adapter = await navigator.gpu.requestAdapter();
+      if (adapter) return { device: "webgpu", dtype: "q4f16", label: "WebGPU" };
+    } catch {
+      // fall through to wasm
+    }
+  }
+  return { device: "wasm", dtype: "q4", label: "CPU — slower, and a larger download" };
+}
+
 async function summonMedium() {
   if (medium) return medium;
 
-  const hasWebGPU = "gpu" in navigator;
-  say(hasWebGPU ? "Loading the model (WebGPU)…" : "Loading the model (CPU — slower)…");
+  const backend = await pickBackend();
+  say(`Loading the model (${backend.label})…`);
   el.progress.hidden = false;
 
-  medium = await pipeline("text-generation", MODEL, {
-    // q4f16 halves the weights again on a GPU that has fp16; WASM needs the fp32 variant
-    dtype: hasWebGPU ? "q4f16" : "q4",
-    device: hasWebGPU ? "webgpu" : "wasm",
-    progress_callback: (p) => {
-      if (p.status === "progress" && p.total) {
-        const pct = Math.round((p.loaded / p.total) * 100);
-        el.bar.style.width = `${pct}%`;
-        say(`Downloading open weights — ${pct}%`);
-      }
-    },
-  });
+  const load = (device, dtype) =>
+    pipeline("text-generation", MODEL, {
+      dtype,
+      device,
+      progress_callback: (p) => {
+        if (p.status === "progress" && p.total) {
+          const pct = Math.round((p.loaded / p.total) * 100);
+          el.bar.style.width = `${pct}%`;
+          say(`Downloading open weights — ${pct}%`);
+        }
+      },
+    });
+
+  try {
+    medium = await load(backend.device, backend.dtype);
+  } catch (err) {
+    // an adapter can still disappear between the check and the first allocation
+    if (backend.device !== "wasm") {
+      console.warn("WebGPU failed, retrying on CPU", err);
+      say("WebGPU did not start — retrying on CPU…");
+      el.bar.style.width = "0";
+      medium = await load("wasm", "q4");
+    } else {
+      throw err;
+    }
+  }
 
   el.progress.hidden = true;
   return medium;
@@ -197,6 +224,7 @@ async function channel(rites, repoLabel) {
   const pipe = await summonMedium();
   const total = rites.reduce((n, r) => n + r.ghosts.length, 0);
   let done = 0;
+  let failed = false;
 
   for (const rite of rites) {
     for (let i = 0; i < rite.ghosts.length; i++) {
@@ -224,8 +252,13 @@ async function channel(rites, repoLabel) {
           streamer,
         });
       } catch (err) {
-        node.textContent = "…it would not say.";
+        // surface the first failure rather than printing a line that reads like output
+        node.textContent = "—";
         console.error(err);
+        if (!failed) {
+          failed = true;
+          say(`The model could not run: ${err?.message ?? err}`, true);
+        }
       }
 
       cursor.remove();
@@ -235,7 +268,7 @@ async function channel(rites, repoLabel) {
     }
   }
 
-  say(`${total} abandoned things, each restated by the model.`);
+  if (!failed) say(`${total} abandoned things, each restated by the model.`);
   el.colophon.hidden = false;
 }
 
