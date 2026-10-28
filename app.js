@@ -1,6 +1,6 @@
 import { pipeline, TextStreamer } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1";
 
-const MODEL = "HuggingFaceTB/SmolLM2-135M-Instruct";
+const MODEL = "HuggingFaceTB/SmolLM2-360M-Instruct";
 
 const el = {
   form: document.getElementById("summon"),
@@ -172,19 +172,24 @@ function render(rites, repoLabel) {
   );
 }
 
-function prompt(ghost, repoLabel) {
+// a 360M model cannot write in a voice, but it can restate a title. ask only for that; the page supplies the mood
+const SHOTS = [
+  { role: "user", content: 'Title: "Add dark mode toggle to settings"\nIn under eight words, what was this trying to do?' },
+  { role: "assistant", content: "Let users switch the interface to dark mode." },
+  { role: "user", content: 'Title: "[ci] pin pnpm to 9.4 for reproducible installs"\nIn under eight words, what was this trying to do?' },
+  { role: "assistant", content: "Pin the package manager so installs stay reproducible." },
+];
+
+function prompt(ghost) {
   return [
     {
       role: "system",
       content:
-        "You speak for work that was abandoned in a software repository. You are given one abandoned thing. " +
-        "Reply with one short sentence, in its own voice, as an epitaph. Be specific to what you are told. " +
-        "Be wry and a little mournful. Never explain yourself, never use lists, never exceed one sentence.",
+        "You restate what a piece of software work was trying to do, in under eight words. " +
+        "Plain language. No preamble, no lists, no quoting the title back.",
     },
-    {
-      role: "user",
-      content: `Repository: ${repoLabel}\nThis is ${ghost.kind}.\nIt was called: "${ghost.title}"\nDetails: ${ghost.meta}\n\nSpeak its epitaph.`,
-    },
+    ...SHOTS,
+    { role: "user", content: `Title: "${ghost.title}"\nIn under eight words, what was this trying to do?` },
   ];
 }
 
@@ -210,11 +215,12 @@ async function channel(rites, repoLabel) {
       });
 
       try {
-        await pipe(prompt(rite.ghosts[i], repoLabel), {
-          max_new_tokens: 48,
-          temperature: 0.9,
+        await pipe(prompt(rite.ghosts[i]), {
+          max_new_tokens: 28,
+          temperature: 0.3,
           top_p: 0.9,
           do_sample: true,
+          repetition_penalty: 1.1,
           streamer,
         });
       } catch (err) {
@@ -229,7 +235,7 @@ async function channel(rites, repoLabel) {
     }
   }
 
-  say(`${total} abandoned things spoke.`);
+  say(`${total} abandoned things, each restated by the model.`);
   el.colophon.hidden = false;
 }
 

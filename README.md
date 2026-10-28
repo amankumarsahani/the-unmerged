@@ -4,7 +4,7 @@ A repository is read as a record of what got built. It is equally a record of **
 and that half never gets read.
 
 The Unmerged reads any public repository's history, finds the work that was abandoned in it, and
-has an open-weight language model write a one-line epitaph for each — **running entirely inside
+has an open-weight language model restate what each one was trying to do — **running entirely inside
 your browser tab.** No install, no server, no API key, no account.
 
 **[Open it →](https://amankumarsahani.github.io/the-unmerged/)**
@@ -25,7 +25,7 @@ still pointing at a commit, each still waiting.
 
 ## The open pieces are the whole project
 
-It runs [**SmolLM2-135M-Instruct**](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct)
+It runs [**SmolLM2-360M-Instruct**](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct)
 — Apache-2.0 weights, openly published training data — through
 [**Transformers.js**](https://github.com/huggingface/transformers.js), executing ONNX on WebGPU
 where the browser has it and WASM where it doesn't.
@@ -39,8 +39,12 @@ That isn't a detail of the implementation. It *is* the implementation:
 - **It still works in five years.** The weights are downloadable and Apache-2.0. No deprecation
   notice can switch this off.
 
-135M parameters is small, and it is sometimes wrong or strange. That is the honest trade: small
-enough to load in a tab over a normal connection, which is what makes everything above true.
+360M parameters is small. I tried 135M first because it downloads in a third of the time, and it
+was not good enough — it echoed titles back and invented repositories that did not exist. I also
+tried asking for epitaphs written in the voice of the dead code, at both sizes, and got generic
+mysticism that had nothing to do with the input. What a model this size *can* do is restate a
+title, so that is all it is asked to do, and the page supplies the mood. It still gets things
+wrong, and it is guessing from a title alone.
 
 ## Running it
 
@@ -54,7 +58,7 @@ python3 -m http.server 8000
 
 Then open `http://localhost:8000`.
 
-**Model download:** ~112 MB on WebGPU (`q4f16`), ~174 MB on the WASM fallback (`q4`). Once, then
+**Model download:** ~260 MB on WebGPU (`q4f16`), ~370 MB on the WASM fallback (`q4`). Once, then
 cached by the browser.
 
 **Rate limits:** unauthenticated GitHub allows 60 requests an hour and one reading costs four.
