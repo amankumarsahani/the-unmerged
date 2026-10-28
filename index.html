@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Git Séance</title>
+<meta name="description" content="Summon the ghosts of a repository's deleted code — reverted commits, erased files and pull requests that never merged — and hear them speak through an open-weight model running entirely in your browser." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯️</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="veil" aria-hidden="true"></div>
+
+<header class="masthead">
+  <div class="candle" aria-hidden="true"><span class="flame"></span></div>
+  <h1>Git Séance</h1>
+  <p class="epigraph">Every repository is a graveyard. Reverted commits, erased files, pull requests that
+  died waiting for review — all of it is still in the history, and none of it gets a funeral.
+  Name a repository and the dead will speak.</p>
+</header>
+
+<main>
+  <form id="summon" class="summon" autocomplete="off">
+    <label class="field">
+      <span>Repository</span>
+      <input id="repo" type="text" value="facebook/react" placeholder="owner/name" spellcheck="false" required />
+    </label>
+    <label class="field token">
+      <span>GitHub token <em>optional, raises the rate limit</em></span>
+      <input id="token" type="password" placeholder="ghp_…" spellcheck="false" />
+    </label>
+    <button id="begin" type="submit">Begin the séance</button>
+  </form>
+
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+  <div id="progress" class="progress" hidden><div id="bar" class="bar"></div></div>
+
+  <section id="graveyard" class="graveyard" hidden></section>
+
+  <section id="colophon" class="colophon" hidden>
+    <h2>What just happened</h2>
+    <p>The repository's history came from the GitHub REST API. Everything after that — every
+    epitaph on this page — was written by <strong>SmolLM2-360M-Instruct</strong>, an Apache-2.0
+    open-weight model that downloaded into this browser tab and generated on your own hardware.
+    No inference server. No API key. Nothing about the repository you searched left this device.</p>
+  </section>
+</main>
+
+<footer>
+  <p>Open weights, open data, open source — <a href="https://github.com/amankumarsahani/git-seance">source</a> ·
+  <a href="https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct">model</a> ·
+  built for Hacktoberfest 2026</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
