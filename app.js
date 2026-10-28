@@ -1,6 +1,6 @@
 import { pipeline, TextStreamer } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.1";
 
-const MODEL = "HuggingFaceTB/SmolLM2-360M-Instruct";
+const MODEL = "HuggingFaceTB/SmolLM2-135M-Instruct";
 
 const el = {
   form: document.getElementById("summon"),
@@ -28,11 +28,12 @@ async function summonMedium() {
   if (medium) return medium;
 
   const hasWebGPU = "gpu" in navigator;
-  say(hasWebGPU ? "Waking the medium (WebGPU)…" : "Waking the medium (CPU — slower)…");
+  say(hasWebGPU ? "Loading the model (WebGPU)…" : "Loading the model (CPU — slower)…");
   el.progress.hidden = false;
 
   medium = await pipeline("text-generation", MODEL, {
-    dtype: "q4",
+    // q4f16 halves the weights again on a GPU that has fp16; WASM needs the fp32 variant
+    dtype: hasWebGPU ? "q4f16" : "q4",
     device: hasWebGPU ? "webgpu" : "wasm",
     progress_callback: (p) => {
       if (p.status === "progress" && p.total) {
@@ -102,7 +103,7 @@ function exhume({ commits, pulls, branches, meta }) {
 
   const unmerged = pulls
     .filter((p) => !p.merged_at)
-    .slice(0, 6)
+    .slice(0, 8)
     .map((p) => ({
       title: `#${p.number} ${p.title}`,
       meta: `opened ${when(p.created_at)} · closed ${when(p.closed_at)} · @${p.user?.login ?? "ghost"}`,
@@ -121,10 +122,10 @@ function exhume({ commits, pulls, branches, meta }) {
     }));
 
   return [
-    { id: "revenants", name: "Revenants", gloss: "Shipped, then taken back. The only ghosts the history admits to making.", ghosts: reverts },
-    { id: "erased", name: "The Erased", gloss: "Commits whose whole purpose was to delete something.", ghosts: erased },
-    { id: "unmerged", name: "The Unmerged", gloss: "Work that was finished, reviewed or ignored, and closed anyway.", ghosts: unmerged },
+    { id: "unmerged", name: "The Unmerged", gloss: "Finished work. Reviewed or ignored. Closed anyway.", ghosts: unmerged },
     { id: "forsaken", name: "The Forsaken", gloss: "Branches still standing, waiting for a merge that never came.", ghosts: forsaken },
+    { id: "revenants", name: "Revenants", gloss: "Shipped, then taken back — the only ghosts a history admits to making.", ghosts: reverts },
+    { id: "erased", name: "The Erased", gloss: "Commits whose whole purpose was to delete something.", ghosts: erased },
   ].filter((r) => r.ghosts.length);
 }
 
@@ -138,7 +139,7 @@ function render(rites, repoLabel) {
     const section = document.createElement("section");
     section.className = "rite";
     section.innerHTML = `
-      <h2>${rite.name} <span class="count">${rite.ghosts.length} found</span></h2>
+      <h2>${rite.name} <span class="count">${rite.ghosts.length}</span></h2>
       <p class="gloss">${rite.gloss}</p>`;
 
     rite.ghosts.forEach((g, i) => {
@@ -167,7 +168,7 @@ function render(rites, repoLabel) {
 
   el.graveyard.insertAdjacentHTML(
     "afterbegin",
-    `<p class="status">${rites.reduce((n, r) => n + r.ghosts.length, 0)} ghosts answered in ${repoLabel}.</p>`
+    `<p class="status">${rites.reduce((n, r) => n + r.ghosts.length, 0)} abandoned things found in ${repoLabel}.</p>`
   );
 }
 
@@ -176,10 +177,9 @@ function prompt(ghost, repoLabel) {
     {
       role: "system",
       content:
-        "You are a medium at a seance for dead source code. You are given one dead thing from a software " +
-        "repository. Speak one or two short sentences about it, in the voice of the dead code itself, as " +
-        "an epitaph. Be specific to what you are told. Be wry and a little mournful. Never explain what " +
-        "you are doing, never use bullet points, and never exceed two sentences.",
+        "You speak for work that was abandoned in a software repository. You are given one abandoned thing. " +
+        "Reply with one short sentence, in its own voice, as an epitaph. Be specific to what you are told. " +
+        "Be wry and a little mournful. Never explain yourself, never use lists, never exceed one sentence.",
     },
     {
       role: "user",
@@ -211,14 +211,14 @@ async function channel(rites, repoLabel) {
 
       try {
         await pipe(prompt(rite.ghosts[i], repoLabel), {
-          max_new_tokens: 72,
+          max_new_tokens: 48,
           temperature: 0.9,
           top_p: 0.9,
           do_sample: true,
           streamer,
         });
       } catch (err) {
-        node.textContent = "The medium lost the thread.";
+        node.textContent = "…it would not say.";
         console.error(err);
       }
 
@@ -229,7 +229,7 @@ async function channel(rites, repoLabel) {
     }
   }
 
-  say(`The séance is complete. ${total} ghosts spoke.`);
+  say(`${total} abandoned things spoke.`);
   el.colophon.hidden = false;
 }
 
@@ -247,21 +247,21 @@ el.form.addEventListener("submit", async (event) => {
   el.begin.disabled = true;
   el.graveyard.hidden = true;
   el.colophon.hidden = true;
-  say(`Opening the history of ${repoLabel}…`);
+  say(`Reading the history of ${repoLabel}…`);
 
   try {
     const dug = await dig(owner, name, el.token.value.trim());
     const rites = exhume(dug);
 
     if (!rites.length) {
-      say("Nothing is buried here. Try an older or busier repository.");
+      say("Nothing was abandoned here. Try an older or busier repository.");
       return;
     }
 
     render(rites, repoLabel);
     await channel(rites, repoLabel);
   } catch (err) {
-    say(err.message || "The séance failed.", true);
+    say(err.message || "Could not read that repository.", true);
     console.error(err);
   } finally {
     el.begin.disabled = false;

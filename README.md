@@ -1,66 +1,65 @@
-# Git Séance 🕯️
+# The Unmerged 🕯️
 
-**Every repository is a graveyard.** Reverted commits, erased files, pull requests that died
-waiting for review — all of it is still in the history, and none of it gets a funeral.
+A repository is read as a record of what got built. It is equally a record of **what didn't** —
+and that half never gets read.
 
-Git Séance names a repository, exhumes what died in it, and lets the dead speak. Every epitaph on
-the page is written by an open-weight language model **running inside your browser tab** — no
-inference server, no API key, nothing about the repository you searched ever leaves your machine.
+The Unmerged reads any public repository's history, finds the work that was abandoned in it, and
+has an open-weight language model write a one-line epitaph for each — **running entirely inside
+your browser tab.** No install, no server, no API key, no account.
 
-**[Open the séance →](https://amankumarsahani.github.io/git-seance/)**
+**[Open it →](https://amankumarsahani.github.io/the-unmerged/)**
 
 ---
 
-## What it summons
-
-The GitHub REST API gives up four kinds of dead:
+## What it finds
 
 | Rite | What it exhumes |
 | --- | --- |
-| **Revenants** | Commits that were shipped and then reverted — the only ghosts a history admits to making |
+| **The Unmerged** | Pull requests closed without ever being merged — finished work that went nowhere |
+| **The Forsaken** | Branches still standing, never merged back into the main line |
+| **Revenants** | Commits shipped and then reverted — the only ghosts a history admits to making |
 | **The Erased** | Commits whose whole purpose was to delete something |
-| **The Unmerged** | Pull requests closed without ever being merged |
-| **The Forsaken** | Branches still standing, waiting for a merge that never came |
 
-Each one is handed to the model with its title, its dates and the hand that buried it. The model
-answers in the voice of the dead code itself.
+Point it at `facebook/react` and it finds branches named `0.3-stable` through `0.9-stable`, each
+still pointing at a commit, each still waiting.
 
 ## The open pieces are the whole project
 
-Git Séance runs [**SmolLM2-360M-Instruct**](https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct)
-— Apache-2.0 weights, trained on openly published data — through
-[**Transformers.js**](https://github.com/huggingface/transformers.js), which executes ONNX models
-on WebGPU where the browser offers it and WASM where it doesn't.
+It runs [**SmolLM2-135M-Instruct**](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct)
+— Apache-2.0 weights, openly published training data — through
+[**Transformers.js**](https://github.com/huggingface/transformers.js), executing ONNX on WebGPU
+where the browser has it and WASM where it doesn't.
 
-That is not a detail of the implementation. It *is* the implementation:
+That isn't a detail of the implementation. It *is* the implementation:
 
-- **No server exists.** This is three static files. There is no backend to deploy, no key to
-  rotate, no bill that grows with traffic. Fork it and it is yours, permanently.
-- **Nothing is uploaded.** The repository you type is read by your browser and reasoned about by
-  your browser. A closed API would mean sending someone's git history to a third party to be
-  logged.
-- **It still works in five years.** The weights are downloadable and the licence is Apache-2.0.
-  No deprecation notice can switch this project off.
+- **No server exists.** Three static files. Nothing to deploy, no key to rotate, no bill that
+  grows with strangers' curiosity. Fork it and it is permanently yours.
+- **Nothing is uploaded.** Your browser reads the history and your browser reasons about it. The
+  privacy isn't a feature that was implemented carefully — it's a property of having no server.
+- **It still works in five years.** The weights are downloadable and Apache-2.0. No deprecation
+  notice can switch this off.
 
-A 360M-parameter model is small, and sometimes it is wrong or strange. That is the honest trade:
-it is small enough to live in a tab, which is what makes everything above true.
+135M parameters is small, and it is sometimes wrong or strange. That is the honest trade: small
+enough to load in a tab over a normal connection, which is what makes everything above true.
 
 ## Running it
 
-No build step and no dependencies to install.
+No build step, no dependencies.
 
 ```bash
-git clone https://github.com/amankumarsahani/git-seance.git
-cd git-seance
+git clone https://github.com/amankumarsahani/the-unmerged.git
+cd the-unmerged
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000`. The model (~250 MB quantised) downloads once and is cached by
-the browser.
+Then open `http://localhost:8000`.
 
-**Rate limits:** unauthenticated GitHub allows 60 requests an hour and a séance costs four. Paste
-a [personal access token](https://github.com/settings/tokens) into the optional field to raise it.
-The token is used for exactly one `fetch` and is never stored.
+**Model download:** ~112 MB on WebGPU (`q4f16`), ~174 MB on the WASM fallback (`q4`). Once, then
+cached by the browser.
+
+**Rate limits:** unauthenticated GitHub allows 60 requests an hour and one reading costs four.
+Paste a [personal access token](https://github.com/settings/tokens) into the optional field to
+raise it — it's used for exactly one `fetch` and is never stored.
 
 **Browser support:** WebGPU (Chrome/Edge 113+, Safari 26+) runs it in seconds. Everything else
 falls back to WASM, which works and is slower.

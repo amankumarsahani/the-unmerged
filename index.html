@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Git Séance</title>
-<meta name="description" content="Summon the ghosts of a repository's deleted code — reverted commits, erased files and pull requests that never merged — and hear them speak through an open-weight model running entirely in your browser." />
+<title>The Unmerged</title>
+<meta name="description" content="Every repository is a record of what got built. It is equally a record of what didn't. The Unmerged finds the abandoned work in any public repo and lets an open-weight model, running in your browser, speak for it." />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯️</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,10 +16,10 @@
 
 <header class="masthead">
   <div class="candle" aria-hidden="true"><span class="flame"></span></div>
-  <h1>Git Séance</h1>
-  <p class="epigraph">Every repository is a graveyard. Reverted commits, erased files, pull requests that
-  died waiting for review — all of it is still in the history, and none of it gets a funeral.
-  Name a repository and the dead will speak.</p>
+  <h1>The Unmerged</h1>
+  <p class="epigraph">A repository is read as a record of what got built. It is equally a record of what
+  didn't — the pull request that went quiet, the branch nobody deleted, the commit that was taken
+  back. That half never gets read. Name a repository and it will speak.</p>
 </header>
 
 <main>
@@ -32,7 +32,7 @@
       <span>GitHub token <em>optional, raises the rate limit</em></span>
       <input id="token" type="password" placeholder="ghp_…" spellcheck="false" />
     </label>
-    <button id="begin" type="submit">Begin the séance</button>
+    <button id="begin" type="submit">Read what was abandoned</button>
   </form>
 
   <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -42,16 +42,16 @@
 
   <section id="colophon" class="colophon" hidden>
     <h2>What just happened</h2>
-    <p>The repository's history came from the GitHub REST API. Everything after that — every
-    epitaph on this page — was written by <strong>SmolLM2-360M-Instruct</strong>, an Apache-2.0
-    open-weight model that downloaded into this browser tab and generated on your own hardware.
-    No inference server. No API key. Nothing about the repository you searched left this device.</p>
+    <p>The history came from the GitHub REST API. Every line written underneath it came from
+    <strong>SmolLM2-135M-Instruct</strong> — Apache-2.0 open weights that downloaded into this tab
+    and generated on your own hardware. There is no inference server, no API key, and no account.
+    Nothing about the repository you typed left this device, because there is nowhere for it to go.</p>
   </section>
 </main>
 
 <footer>
-  <p>Open weights, open data, open source — <a href="https://github.com/amankumarsahani/git-seance">source</a> ·
-  <a href="https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct">model</a> ·
+  <p>Open weights, open data, open source — <a href="https://github.com/amankumarsahani/the-unmerged">source</a> ·
+  <a href="https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct">model</a> ·
   built for Hacktoberfest 2026</p>
 </footer>
 
